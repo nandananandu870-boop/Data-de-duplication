@@ -1,64 +1,53 @@
-<!doctype html>
-<html>
+<!DOCTYPE html>
+<html lang="en">
 <head>
-  <meta charset="utf-8">
-  <title>Gmail Deduplicator</title>
-  <style>
-    body { font-family: Arial; margin: 40px; }
-    button { padding: 10px 15px; font-size: 16px; }
-    #log { margin-top: 20px; white-space: pre-wrap; border: 1px solid #ddd; padding: 12px; }
-  </style>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Gmail Data De-duplication</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            background: #f4f6f8;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            height: 100vh;
+        }
+        .container {
+            text-align: center;
+            background: #fff;
+            padding: 30px;
+            border-radius: 10px;
+            box-shadow: 0 0 10px rgba(0,0,0,0.1);
+        }
+        button {
+            padding: 12px 20px;
+            margin: 10px;
+            border: none;
+            border-radius: 6px;
+            font-size: 16px;
+            cursor: pointer;
+        }
+        .login { background: #4285F4; color: white; }
+        .logout { background: #db4437; color: white; }
+        .dedupe { background: #0f9d58; color: white; }
+    </style>
 </head>
 <body>
-  <h1>Gmail Deduplicator</h1>
-
-  {% if signed_in %}
-    <p>You're signed in. Click below to scan and delete duplicates.</p>
-    <button id="run">Scan & Delete Duplicates</button>
-    <a href="/signout" style="margin-left:10px;">Sign out</a>
-  {% else %}
-    <p>You are not signed in.</p>
-    <a href="/authorize"><button>Sign in with Google</button></a>
-  {% endif %}
-
-  <div id="log"></div>
-
-<script>
-document.addEventListener("DOMContentLoaded", function() {
-  const log = (txt) => {
-    const el = document.getElementById("log");
-    el.textContent = txt + "\n\n" + el.textContent;
-  };
-
-  const runBtn = document.getElementById("run");
-  if (runBtn) {
-    runBtn.addEventListener("click", async () => {
-      runBtn.disabled = true;
-      runBtn.textContent = "Scanning...";
-      log("Starting deduplication...");
-
-      try {
-        const res = await fetch("/dedupe", { method: "POST" });
-        if (!res.ok) {
-          const err = await res.json();
-          log("Error: " + (err.error || JSON.stringify(err)));
-          runBtn.disabled = false;
-          runBtn.textContent = "Scan & Delete Duplicates";
-          return;
-        }
-        const data = await res.json();
-        log("Done.\nDeleted count: " + data.deleted_count +
-            "\nDuplicates found: " + data.duplicates_found +
-            "\nUnique emails scanned: " + data.unique_emails);
-      } catch (e) {
-        log("Network error: " + e);
-      } finally {
-        runBtn.disabled = false;
-        runBtn.textContent = "Scan & Delete Duplicates";
-      }
-    });
-  }
-});
-</script>
+    <div class="container">
+        <h1>📧 Gmail Data De-duplication</h1>
+        
+        {% if signed_in %}
+            <p>You are signed in ✅</p>
+            <form action="/dedupe" method="POST">
+                <button class="dedupe">Scan & Remove Duplicates</button>
+            </form>
+            <br>
+            <a href="/signout"><button class="logout">Sign Out</button></a>
+        {% else %}
+            <p>Please sign in with Google to continue</p>
+            <a href="/authorize"><button class="login">Sign in with Google</button></a>
+        {% endif %}
+    </div>
 </body>
 </html>
