@@ -27,6 +27,7 @@ def creds_to_dict(creds: Credentials):
         "scopes": creds.scopes,
     }
 
+
 def creds_from_session():
     if "credentials" not in session:
         return None
@@ -39,6 +40,7 @@ def index():
     creds = creds_from_session()
     signed_in = creds is not None and creds.valid
     return render_template("index.html", signed_in=signed_in)
+
 
 @app.route("/authorize")
 def authorize():
@@ -55,6 +57,7 @@ def authorize():
     session["state"] = state
     return redirect(authorization_url)
 
+
 @app.route("/oauth2callback")
 def oauth2callback():
     state = session.get("state", None)
@@ -69,10 +72,12 @@ def oauth2callback():
     session["credentials"] = creds_to_dict(creds)
     return redirect(url_for("index"))
 
+
 @app.route("/signout")
 def signout():
     session.clear()
     return redirect(url_for("index"))
+
 
 @app.route("/dedupe", methods=["POST"])
 def dedupe():
@@ -87,13 +92,20 @@ def dedupe():
     duplicates = []
     page_token = None
 
+    # Fetch messages page by page
     while True:
-        resp = service.users().messages().list(userId=user_id, maxResults=500, pageToken=page_token).execute()
+        resp = service.users().messages().list(
+            userId=user_id,
+            maxResults=500,
+            pageToken=page_token
+        ).execute()
         messages = resp.get("messages", [])
         for m in messages:
             try:
                 msg = service.users().messages().get(
-                    userId=user_id, id=m["id"], format="metadata",
+                    userId=user_id,
+                    id=m["id"],
+                    format="metadata",
                     metadataHeaders=["From", "Subject"]
                 ).execute()
             except:
@@ -118,7 +130,11 @@ def dedupe():
 
     deleted_count = 0
     if duplicates:
-        service.users().messages().batchDelete(userId=user_id, body={"ids": duplicates}).execute()
+        for msg_id in duplicates:
+            service.users().messages().trash(
+                userId=user_id,
+                id=msg_id
+            ).execute()
         deleted_count = len(duplicates)
 
     return jsonify({
