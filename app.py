@@ -96,7 +96,7 @@ def dedupe():
     while True:
         resp = service.users().messages().list(
             userId=user_id,
-            maxResults=500,
+            maxResults=5,
             pageToken=page_token
         ).execute()
         messages = resp.get("messages", [])
