@@ -19,6 +19,7 @@
             padding: 30px;
             border-radius: 10px;
             box-shadow: 0 0 10px rgba(0,0,0,0.1);
+            width: 400px;
         }
         button {
             padding: 12px 20px;
@@ -31,6 +32,28 @@
         .login { background: #4285F4; color: white; }
         .logout { background: #db4437; color: white; }
         .dedupe { background: #0f9d58; color: white; }
+        #progressBox {
+            margin-top: 20px;
+            display: none;
+            text-align: left;
+        }
+        .progress {
+            background: #eee;
+            border-radius: 6px;
+            overflow: hidden;
+            height: 20px;
+            margin-top: 10px;
+        }
+        .progress-bar {
+            background: #0f9d58;
+            height: 100%;
+            width: 0%;
+            color: white;
+            text-align: center;
+            font-size: 12px;
+            line-height: 20px;
+            transition: width 0.5s;
+        }
     </style>
 </head>
 <body>
@@ -39,15 +62,55 @@
         
         {% if signed_in %}
             <p>You are signed in ✅</p>
-            <form action="/dedupe" method="POST">
-                <button class="dedupe">Scan & Remove Duplicates</button>
-            </form>
+            <button class="dedupe" onclick="startDedupe()">Scan & Remove Duplicates</button>
             <br>
             <a href="/signout"><button class="logout">Sign Out</button></a>
+
+            <div id="progressBox">
+                <p><b>Scanning Progress:</b></p>
+                <p>Scanned: <span id="scanned">0</span></p>
+                <p>Duplicates Found: <span id="duplicates">0</span></p>
+                <p>Deleted: <span id="deleted">0</span></p>
+
+                <div class="progress">
+                    <div id="progressBar" class="progress-bar">0%</div>
+                </div>
+            </div>
         {% else %}
             <p>Please sign in with Google to continue</p>
             <a href="/authorize"><button class="login">Sign in with Google</button></a>
         {% endif %}
     </div>
+
+    <script>
+    async function startDedupe() {
+        document.getElementById("progressBox").style.display = "block";
+
+        // Start dedupe process
+        await fetch("/dedupe", { method: "POST" });
+
+        // Poll status every 2s
+        let interval = setInterval(async () => {
+            let resp = await fetch("/dedupe/status");
+            let status = await resp.json();
+
+            document.getElementById("scanned").innerText = status.scanned;
+            document.getElementById("duplicates").innerText = status.duplicates;
+            document.getElementById("deleted").innerText = status.deleted;
+
+            // Fake progress (based on scanned) - you can adjust logic
+            let progressPercent = status.done ? 100 : Math.min(95, Math.floor(status.scanned / 50));
+            document.getElementById("progressBar").style.width = progressPercent + "%";
+            document.getElementById("progressBar").innerText = progressPercent + "%";
+
+            if (status.done) {
+                clearInterval(interval);
+                document.getElementById("progressBar").style.width = "100%";
+                document.getElementById("progressBar").innerText = "100%";
+                alert(`✅ Done! Scanned ${status.scanned}, removed ${status.deleted} duplicates.`);
+            }
+        }, 2000);
+    }
+    </script>
 </body>
 </html>
