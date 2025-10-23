@@ -1,4 +1,4 @@
-from _future_ import print_function
+from __future__ import print_function
 import os
 import hashlib
 from google.auth.transport.requests import Request
@@ -128,7 +128,7 @@ def deduplicate_emails(service, max_emails=200, user_id='me'):
 
     # --- EXTRA CODE for showing & moving to Trash ---
     if duplicates:
-        print(f"\n⚠ Found {len(duplicates)} duplicate emails:\n")
+        print(f"\n⚠️ Found {len(duplicates)} duplicate emails:\n")
         details_list = []
         for msg_id in duplicates:
             details = get_email_details(service, msg_id)
@@ -153,7 +153,7 @@ def deduplicate_emails(service, max_emails=200, user_id='me'):
 
     print(f"\nUnique emails scanned: {len(seen)}")
 
-if _name_ == '_main_':
+if __name__ == '__main__':
     max_scan = int(input("Enter number of emails to scan (max 1000): ") or 200)
     service = get_gmail_service()
     deduplicate_emails(service, max_emails=max_scan)
